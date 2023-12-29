@@ -6,10 +6,12 @@ import {
   Patch,
   Param,
   Delete,
+  Res,
 } from '@nestjs/common';
 import { BrowserManagerService } from './browser-manager.service';
 import { CreateBrowserManagerDto } from './dto/create-browser-manager.dto';
 import { UpdateBrowserManagerDto } from './dto/update-browser-manager.dto';
+import { Response } from 'express';
 
 @Controller('browser-manager')
 export class BrowserManagerController {
@@ -43,8 +45,19 @@ export class BrowserManagerController {
     return this.browserManagerService.remove(+id);
   }
 
-  @Post('update-auto-login/:time')
+  @Get('auto-login/now')
+  autoLogin(@Res() response: Response) {
+    this.browserManagerService.autoLogin();
+    response.send('Auto login started');
+  }
+
+  @Get('auto-login/:time')
   updateAutoLogin(@Param('time') time: string) {
     return this.browserManagerService.updateAutoLogin(time);
+  }
+
+  @Get('cookies-grabber/:username')
+  cookiesGrabber(@Param('username') username: string) {
+    return this.browserManagerService.cookiesGrabber(username);
   }
 }
