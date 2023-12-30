@@ -1,12 +1,9 @@
-import { Module } from '@nestjs/common';
+import { Global, Module } from '@nestjs/common';
 import { BrowserManagerService } from './browser-manager.service';
-import { BrowserManagerController } from './browser-manager.controller';
-import { TypeOrmModule } from '@nestjs/typeorm';
-import { Account } from './entities/account.entity';
 
+@Global()
 @Module({
-  imports: [TypeOrmModule.forFeature([Account])],
-  controllers: [BrowserManagerController],
   providers: [BrowserManagerService],
+  exports: [BrowserManagerService],
 })
 export class BrowserManagerModule {}

@@ -1,3 +1,4 @@
+import { IsEmail } from 'class-validator';
 import { Column, Entity, ObjectId, ObjectIdColumn } from 'typeorm';
 
 @Entity()
@@ -6,6 +7,7 @@ export class Account {
   id: ObjectId;
 
   @Column()
+  @IsEmail()
   username: string;
 
   @Column()
