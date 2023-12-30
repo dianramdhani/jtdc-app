@@ -10,4 +10,10 @@ export class Account {
 
   @Column()
   cookies?: string;
+
+  @Column()
+  lastCookiesUpdate?: string;
+
+  @Column()
+  point?: number;
 }

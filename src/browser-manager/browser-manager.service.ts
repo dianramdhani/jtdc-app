@@ -1,13 +1,14 @@
-import { Injectable, Logger } from '@nestjs/common';
-import { CreateBrowserManagerDto } from './dto/create-browser-manager.dto';
-import { UpdateBrowserManagerDto } from './dto/update-browser-manager.dto';
-import { Cron, SchedulerRegistry } from '@nestjs/schedule';
-import { CronTime } from '@nestjs/schedule/node_modules/cron/dist/time';
 import puppeteer, { Protocol } from 'puppeteer';
 import { env } from 'process';
+import { Injectable, Logger } from '@nestjs/common';
+import { Cron, SchedulerRegistry } from '@nestjs/schedule';
+import { CronTime } from '@nestjs/schedule/node_modules/cron/dist/time';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Account } from './entities/account.entity';
 import { Repository } from 'typeorm';
+import { formatDate } from 'src/util/helpers';
+import { CreateBrowserManagerDto } from './dto/create-browser-manager.dto';
+import { UpdateBrowserManagerDto } from './dto/update-browser-manager.dto';
+import { Account } from './entities/account.entity';
 
 @Injectable()
 export class BrowserManagerService {
@@ -76,9 +77,12 @@ export class BrowserManagerService {
       await browser.close();
     }
 
+    const account = await this.accountRepository.findOneBy({ username });
     return this.accountRepository.save({
+      ...account,
       username,
       cookies: JSON.stringify(cookies),
+      lastCookiesUpdate: formatDate(new Date()),
     });
   }
 }
