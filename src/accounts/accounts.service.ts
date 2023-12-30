@@ -3,11 +3,9 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { formatDate } from 'src/util/helpers';
 import { BrowserManagerService } from 'src/browser-manager/browser-manager.service';
-import { CreateAccountDto } from './dto/create-account.dto';
 import { Account } from './entities/account.entity';
 import { Checkout } from './entities/checkout.entity';
 import { CheckoutDto } from './dto/checkout.dto';
-import { CreateAccountMultipleDto } from './dto/create-account-multiple';
 
 @Injectable()
 export class AccountsService {
@@ -21,7 +19,7 @@ export class AccountsService {
     private readonly browserManagerService: BrowserManagerService,
   ) {}
 
-  async create({ username }: CreateAccountDto) {
+  async create(username: string) {
     const cookies = await this.browserManagerService.cookiesGrabber(username);
     const account = await this.accountRepository.findOneBy({ username });
     return this.accountRepository.save({
@@ -32,10 +30,10 @@ export class AccountsService {
     });
   }
 
-  async createMultiple({ usernames }: CreateAccountMultipleDto) {
+  async createMultiple(usernames: string[]) {
     const results: Account[] = [];
     for (const username of usernames) {
-      results.push(await this.create({ username }));
+      results.push(await this.create(username));
     }
     return results;
   }

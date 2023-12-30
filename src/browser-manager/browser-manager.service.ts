@@ -1,10 +1,26 @@
+import puppeteer, { Protocol, PuppeteerLaunchOptions } from 'puppeteer';
 import { Injectable, Logger } from '@nestjs/common';
+import { Cron, SchedulerRegistry } from '@nestjs/schedule';
+import { CronTime } from '@nestjs/schedule/node_modules/cron/dist';
+import { InjectRepository } from '@nestjs/typeorm';
 import { env } from 'process';
-import puppeteer, { Protocol } from 'puppeteer';
+import { Repository } from 'typeorm';
+import { Account } from 'src/accounts/entities/account.entity';
+import { formatDate } from 'src/util/helpers';
 
 @Injectable()
 export class BrowserManagerService {
   private readonly logger = new Logger(BrowserManagerService.name);
+  private readonly puppeteerLaunchOptions: PuppeteerLaunchOptions = {
+    headless: env.BROWSER_MODE === 'headless' ? 'new' : false,
+    defaultViewport: null,
+  };
+
+  constructor(
+    @InjectRepository(Account)
+    private readonly accountRepository: Repository<Account>,
+    private schedulerRegistry: SchedulerRegistry,
+  ) {}
 
   async cookiesGrabber(username: string) {
     const browser = await puppeteer.launch({
@@ -32,6 +48,7 @@ export class BrowserManagerService {
     return cookies;
   }
 
+  // TODO: belum selesai
   async checkout({
     username,
     rawCookies,
@@ -43,10 +60,7 @@ export class BrowserManagerService {
   }) {
     let headers: Record<string, string> = {};
     let addressID: number = -1;
-    const browser = await puppeteer.launch({
-      headless: env.BROWSER_MODE === 'headless' ? 'new' : false,
-      defaultViewport: null,
-    });
+    const browser = await puppeteer.launch(this.puppeteerLaunchOptions);
     const page = await browser.newPage();
     page.setRequestInterception(true);
     page
@@ -106,5 +120,66 @@ export class BrowserManagerService {
     }
 
     this.logger.log(addressID, headers);
+  }
+
+  setAutoLogin(time: string) {
+    const [hour, minute] = time.split(':');
+    this.schedulerRegistry
+      .getCronJob('autoLogin')
+      .setTime(new CronTime(`${minute} ${hour} * * *`, 'Asia/Jakarta'));
+  }
+
+  async getPoint({
+    username,
+    cookies,
+  }: {
+    username?: string;
+    cookies?: Protocol.Network.CookieParam[];
+  }) {
+    if (!username && !cookies) {
+      throw new Error('Setidaknya isi username atau cookies');
+    }
+    if (username) {
+      cookies = await this.accountRepository
+        .findOneBy({ username })
+        .then(({ cookies }) => JSON.parse(cookies));
+    }
+
+    const browser = await puppeteer.launch(this.puppeteerLaunchOptions);
+    let point: number = 0;
+
+    try {
+      const page = await browser.newPage();
+      await page.setCookie(...cookies);
+      await page.goto(env.URL_MEMBERSHIP, { waitUntil: 'networkidle2' });
+      point = await page.$eval(
+        '[data-testid="link-mw-point"] p:nth-child(2)',
+        (el) => +el.textContent.replace(/[^\d]/g, ''),
+      );
+    } catch (error) {
+      this.logger.error('Gagal get point', { cause: error });
+    } finally {
+      await browser.close();
+    }
+
+    return point;
+  }
+
+  @Cron('* * 0 * * *', {
+    name: 'autoLogin',
+    timeZone: 'Asia/Jakarta',
+  })
+  private async autoLogin() {
+    const accounts = await this.accountRepository.find();
+    for (const account of accounts) {
+      const point = await this.getPoint({
+        cookies: JSON.parse(account.cookies),
+      });
+      await this.accountRepository.save({
+        ...account,
+        point,
+        lastLogin: formatDate(new Date()),
+      });
+    }
   }
 }

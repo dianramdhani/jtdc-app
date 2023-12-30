@@ -20,6 +20,9 @@ export class Account {
   @Column()
   point?: number;
 
+  @Column()
+  lastLogin?: string;
+
   @ManyToOne(() => Checkout, (checkout) => checkout.accounts)
   checkout?: Checkout;
 }

@@ -19,6 +19,7 @@ import { BrowserManagerModule } from './browser-manager/browser-manager.module';
       useNewUrlParser: true,
       autoLoadEntities: true,
     }),
+    ScheduleModule.forRoot(),
     AccountsModule,
     BrowserManagerModule,
   ],
