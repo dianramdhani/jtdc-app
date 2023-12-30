@@ -6,7 +6,7 @@ export class Account {
   @ObjectIdColumn()
   id: ObjectId;
 
-  @Column()
+  @Column({ unique: true })
   @IsEmail()
   username: string;
 
