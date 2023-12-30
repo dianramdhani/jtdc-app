@@ -331,7 +331,7 @@ export class BrowserManagerService {
     return point;
   }
 
-  @Cron('* * 0 * * *', {
+  @Cron('0 0 0 * * *', {
     name: 'autoLogin',
     timeZone: 'Asia/Jakarta',
   })
