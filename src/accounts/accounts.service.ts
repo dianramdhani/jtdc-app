@@ -49,6 +49,15 @@ export class AccountsService {
         this.accountRepository.findOneBy({ username }),
       ),
     );
+    await Promise.all(
+      accounts.map((account) =>
+        this.browserManagerService.checkout({
+          username: account.username,
+          rawCookies: account.cookies,
+          time,
+        }),
+      ),
+    );
     return this.checkoutRepository.save({
       accounts,
       time,
