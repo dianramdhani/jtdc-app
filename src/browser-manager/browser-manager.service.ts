@@ -5,12 +5,19 @@ import { Cron, SchedulerRegistry } from '@nestjs/schedule';
 import { CronTime } from '@nestjs/schedule/node_modules/cron/dist/time';
 import puppeteer, { Protocol } from 'puppeteer';
 import { env } from 'process';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Account } from './entities/account.entity';
+import { Repository } from 'typeorm';
 
 @Injectable()
 export class BrowserManagerService {
   private readonly logger = new Logger(BrowserManagerService.name);
 
-  constructor(private schedulerRegistry: SchedulerRegistry) {}
+  constructor(
+    private schedulerRegistry: SchedulerRegistry,
+    @InjectRepository(Account)
+    private accountRepository: Repository<Account>,
+  ) {}
 
   create(createBrowserManagerDto: CreateBrowserManagerDto) {
     return 'This action adds a new browserManager';
@@ -69,6 +76,9 @@ export class BrowserManagerService {
       await browser.close();
     }
 
-    return cookies;
+    return this.accountRepository.save({
+      username,
+      cookies: JSON.stringify(cookies),
+    });
   }
 }
