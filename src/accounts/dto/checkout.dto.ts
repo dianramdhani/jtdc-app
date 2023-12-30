@@ -5,5 +5,5 @@ export class CheckoutDto {
   usernames: string[];
 
   @ApiProperty()
-  time: string;
+  time?: string;
 }

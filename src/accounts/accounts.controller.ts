@@ -59,6 +59,7 @@ export class AccountsController {
 
   @Post('checkout')
   checkout(@Body() checkoutDto: CheckoutDto) {
-    return this.accountsService.checkout(checkoutDto);
+    this.accountsService.checkout(checkoutDto);
+    return 'checkout in process';
   }
 }
