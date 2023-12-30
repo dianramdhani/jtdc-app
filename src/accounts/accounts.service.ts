@@ -5,6 +5,8 @@ import { formatDate } from 'src/util/helpers';
 import { BrowserManagerService } from 'src/browser-manager/browser-manager.service';
 import { CreateAccountDto } from './dto/create-account.dto';
 import { Account } from './entities/account.entity';
+import { Checkout } from './entities/checkout.entity';
+import { CheckoutDto } from './dto/checkout.dto';
 
 @Injectable()
 export class AccountsService {
@@ -13,6 +15,8 @@ export class AccountsService {
   constructor(
     @InjectRepository(Account)
     private readonly accountRepository: Repository<Account>,
+    @InjectRepository(Checkout)
+    private readonly checkoutRepository: Repository<Checkout>,
     private readonly browserManagerService: BrowserManagerService,
   ) {}
 
@@ -37,5 +41,17 @@ export class AccountsService {
 
   remove(username: string) {
     return this.accountRepository.delete({ username });
+  }
+
+  async checkout({ usernames, time }: CheckoutDto) {
+    const accounts = await Promise.all(
+      usernames.map((username) =>
+        this.accountRepository.findOneBy({ username }),
+      ),
+    );
+    return this.checkoutRepository.save({
+      accounts,
+      time,
+    });
   }
 }

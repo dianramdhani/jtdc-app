@@ -1,6 +1,7 @@
 import { Controller, Get, Post, Body, Param, Delete } from '@nestjs/common';
 import { AccountsService } from './accounts.service';
 import { CreateAccountDto } from './dto/create-account.dto';
+import { CheckoutDto } from './dto/checkout.dto';
 
 @Controller('accounts')
 export class AccountsController {
@@ -24,5 +25,10 @@ export class AccountsController {
   @Delete(':username')
   remove(@Param('username') username: string) {
     return this.accountsService.remove(username);
+  }
+
+  @Post('checkout')
+  checkout(@Body() checkoutDto: CheckoutDto) {
+    return this.accountsService.checkout(checkoutDto);
   }
 }

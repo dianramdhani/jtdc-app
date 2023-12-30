@@ -1,5 +1,6 @@
 import { IsEmail } from 'class-validator';
-import { Column, Entity, ObjectId, ObjectIdColumn } from 'typeorm';
+import { Column, Entity, ManyToOne, ObjectId, ObjectIdColumn } from 'typeorm';
+import { Checkout } from './checkout.entity';
 
 @Entity()
 export class Account {
@@ -18,4 +19,7 @@ export class Account {
 
   @Column()
   point?: number;
+
+  @ManyToOne(() => Checkout, (checkout) => checkout.accounts)
+  checkout?: Checkout;
 }
