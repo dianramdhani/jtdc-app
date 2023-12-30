@@ -7,6 +7,7 @@ import { CreateAccountDto } from './dto/create-account.dto';
 import { Account } from './entities/account.entity';
 import { Checkout } from './entities/checkout.entity';
 import { CheckoutDto } from './dto/checkout.dto';
+import { CreateAccountMultipleDto } from './dto/create-account-multiple';
 
 @Injectable()
 export class AccountsService {
@@ -29,6 +30,14 @@ export class AccountsService {
       cookies: JSON.stringify(cookies),
       lastCookiesUpdate: formatDate(new Date()),
     });
+  }
+
+  async createMultiple({ usernames }: CreateAccountMultipleDto) {
+    const results: Account[] = [];
+    for (const username of usernames) {
+      results.push(await this.create({ username }));
+    }
+    return results;
   }
 
   findAll() {
