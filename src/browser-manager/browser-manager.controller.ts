@@ -17,8 +17,9 @@ export class BrowserManagerController {
       },
       required: ['time'],
     },
+    required: false,
   })
-  setAutoLogin(@Body() { time }: { time: string }) {
+  setAutoLogin(@Body() { time }: { time?: string }) {
     this.browserManagerService.setAutoLogin(time);
     return 'Set auto login successfully';
   }
