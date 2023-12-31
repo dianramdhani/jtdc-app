@@ -16,6 +16,7 @@ export class BrowserManagerService {
   private readonly puppeteerLaunchOptions: PuppeteerLaunchOptions = {
     headless: env.BROWSER_MODE === 'headless' ? 'new' : false,
     defaultViewport: null,
+    executablePath: env.CHROME_PATH,
   };
 
   constructor(

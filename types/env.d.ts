@@ -9,6 +9,7 @@ declare global {
       DB_URL: string;
       BROWSER_MODE: 'head' | 'headless';
       NODE_ENV: 'dev' | 'prod';
+      CHROME_PATH?: string;
     }
   }
 }
