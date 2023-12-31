@@ -22,6 +22,7 @@ export class AccountsService {
   async create(username: string) {
     const cookies = await this.browserManagerService.cookiesGrabber(username);
     const account = await this.accountRepository.findOneBy({ username });
+    this.logger.log(`${username} cookies updated`);
     return this.accountRepository.save({
       ...account,
       username,
@@ -30,7 +31,12 @@ export class AccountsService {
     });
   }
 
-  async createMultiple(usernames: string[]) {
+  async createMultiple(usernames?: string[]) {
+    if (!usernames) {
+      usernames = (await this.accountRepository.find()).map(
+        ({ username }) => username,
+      );
+    }
     const results: Account[] = [];
     for (const username of usernames) {
       results.push(await this.create(username));

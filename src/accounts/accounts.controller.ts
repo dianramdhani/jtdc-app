@@ -1,7 +1,17 @@
-import { Controller, Get, Post, Body, Param, Delete } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Param,
+  Delete,
+  Query,
+  ParseBoolPipe,
+  DefaultValuePipe,
+} from '@nestjs/common';
 import { AccountsService } from './accounts.service';
 import { CheckoutDto } from './dto/checkout.dto';
-import { ApiBody } from '@nestjs/swagger';
+import { ApiBody, ApiQuery } from '@nestjs/swagger';
 
 @Controller('accounts')
 export class AccountsController {
@@ -37,14 +47,24 @@ export class AccountsController {
       },
       required: ['usernames'],
     },
+    required: false,
   })
-  createMultiple(@Body() { usernames }: { usernames: string[] }) {
+  createMultiple(@Body() { usernames }: { usernames?: string[] }) {
     return this.accountsService.createMultiple(usernames);
   }
 
   @Get()
-  findAll() {
-    return this.accountsService.findAll();
+  @ApiQuery({
+    name: 'username-only',
+    required: false,
+  })
+  async findAll(
+    @Query('username-only', new DefaultValuePipe(false), ParseBoolPipe)
+    usernameOnly?: boolean,
+  ) {
+    return usernameOnly
+      ? (await this.accountsService.findAll()).map(({ username }) => username)
+      : this.accountsService.findAll();
   }
 
   @Get(':username')
