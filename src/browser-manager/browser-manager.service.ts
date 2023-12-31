@@ -27,6 +27,7 @@ export class BrowserManagerService {
 
   async cookiesGrabber(username: string) {
     const browser = await puppeteer.launch({
+      args: ['--no-sandbox'],
       headless: env.BROWSER_MODE === 'headless' ? 'new' : false,
       defaultViewport: null,
     });
