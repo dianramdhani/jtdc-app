@@ -1,12 +1,14 @@
 import { IsEmail } from 'class-validator';
 import { Column, Entity, ManyToOne, ObjectId, ObjectIdColumn } from 'typeorm';
 import { Checkout } from './checkout.entity';
+import { ApiProperty } from '@nestjs/swagger';
 
 @Entity()
 export class Account {
   @ObjectIdColumn()
   id: ObjectId;
 
+  @ApiProperty()
   @Column({ unique: true })
   @IsEmail()
   username: string;
@@ -17,9 +19,11 @@ export class Account {
   @Column()
   lastCookiesUpdate?: string;
 
+  @ApiProperty()
   @Column()
   point?: number;
 
+  @ApiProperty()
   @Column()
   lastLogin?: string;
 

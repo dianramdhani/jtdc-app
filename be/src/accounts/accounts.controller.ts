@@ -11,7 +11,8 @@ import {
 } from '@nestjs/common';
 import { AccountsService } from './accounts.service';
 import { CheckoutDto } from './dto/checkout.dto';
-import { ApiBody, ApiQuery } from '@nestjs/swagger';
+import { ApiBody, ApiOkResponse, ApiQuery } from '@nestjs/swagger';
+import { Account } from './entities/account.entity';
 
 @Controller('accounts')
 export class AccountsController {
@@ -29,6 +30,7 @@ export class AccountsController {
       required: ['username'],
     },
   })
+  @ApiOkResponse({ type: Account })
   create(@Body() { username }: { username: string }) {
     return this.accountsService.create(username);
   }
@@ -49,6 +51,10 @@ export class AccountsController {
     },
     required: false,
   })
+  @ApiOkResponse({
+    type: Account,
+    isArray: true,
+  })
   createMultiple(@Body() { usernames }: { usernames?: string[] }) {
     return this.accountsService.createMultiple(usernames);
   }
@@ -57,6 +63,10 @@ export class AccountsController {
   @ApiQuery({
     name: 'username-only',
     required: false,
+  })
+  @ApiOkResponse({
+    type: Account,
+    isArray: true,
   })
   async findAll(
     @Query('username-only', new DefaultValuePipe(false), ParseBoolPipe)
@@ -68,6 +78,7 @@ export class AccountsController {
   }
 
   @Get(':username')
+  @ApiOkResponse({ type: Account })
   findOne(@Param('username') username: string) {
     return this.accountsService.findOne(username);
   }
