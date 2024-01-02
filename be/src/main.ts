@@ -32,6 +32,7 @@ async function bootstrap() {
       ],
     }),
   });
+  app.enableCors({ origin: '*' });
   const config = new DocumentBuilder().build();
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('swagger', app, document);

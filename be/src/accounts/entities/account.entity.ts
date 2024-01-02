@@ -16,6 +16,7 @@ export class Account {
   @Column()
   cookies?: string;
 
+  @ApiProperty()
   @Column()
   lastCookiesUpdate?: string;
 
