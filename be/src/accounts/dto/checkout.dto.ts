@@ -6,4 +6,7 @@ export class CheckoutDto {
 
   @ApiProperty()
   time?: string;
+
+  @ApiProperty()
+  usePoint?: boolean;
 }

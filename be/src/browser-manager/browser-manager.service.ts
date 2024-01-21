@@ -55,10 +55,12 @@ export class BrowserManagerService {
     username,
     rawCookies,
     time,
+    usePoint,
   }: {
     username: string;
     rawCookies: string;
     time?: string;
+    usePoint?: boolean;
   }) {
     const checkoutInstance = new Checkout({
       logger: this.logger,
@@ -66,7 +68,7 @@ export class BrowserManagerService {
       schedulerRegistry: this.schedulerRegistry,
       rawCookies,
       username,
-      time,
+      usePoint,
     });
 
     if (!time) {

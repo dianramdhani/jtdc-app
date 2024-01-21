@@ -21,7 +21,7 @@ export default class Checkout {
       rawCookies: string;
       logger: Logger;
       schedulerRegistry: SchedulerRegistry;
-      time?: string;
+      usePoint?: boolean;
     },
   ) {}
 
@@ -104,7 +104,7 @@ export default class Checkout {
     try {
       const startTime = Date.now();
       await this.page?.evaluate(
-        async (urlQuery, headers, addressID, isProd, username) => {
+        async (urlQuery, headers, addressID, isProd, username, usePoint) => {
           const process: () => Promise<string[]> = async () => {
             const responses: string[] = [];
 
@@ -137,7 +137,7 @@ export default class Checkout {
                         operationName: 'addPreBook',
                         variables: {
                           params: {
-                            isRewardPoint: false,
+                            isRewardPoint: usePoint,
                             addressID,
                             shippingID: 4,
                             shippingName: 'J&T',
@@ -204,6 +204,7 @@ export default class Checkout {
         this.addressID,
         env.NODE_ENV === 'prod',
         this.config.username,
+        this.config.usePoint ?? false,
       );
       this.config.logger.log(
         `${this.config.username} lama CO ${Date.now() - startTime}ms`,
