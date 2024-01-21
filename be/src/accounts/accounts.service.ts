@@ -56,7 +56,7 @@ export class AccountsService {
     return this.accountRepository.delete({ username });
   }
 
-  async checkout({ usernames, time }: CheckoutDto) {
+  async checkout({ usernames, time, usePoint }: CheckoutDto) {
     const accounts = await Promise.all(
       usernames.map((username) =>
         this.accountRepository.findOneBy({ username }),
@@ -68,6 +68,7 @@ export class AccountsService {
           username: account.username,
           rawCookies: account.cookies,
           time,
+          usePoint,
         }),
       ),
     );
