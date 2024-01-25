@@ -104,7 +104,7 @@ export class BrowserManagerService {
     prepareJob.start();
     processJob.start();
     this.logger.log(
-      `${username} prepare ${timePrepare.getMinutes()}:${timePrepare.getHours()}, process ${time}`,
+      `${username} prepare ${timePrepare.getHours()}:${timePrepare.getMinutes()}, process ${time}`,
     );
   }
 
