@@ -64,6 +64,10 @@ export class AccountsController {
     name: 'username-only',
     required: false,
   })
+  @ApiQuery({
+    name: 'sort-by',
+    required: false,
+  })
   @ApiOkResponse({
     type: Account,
     isArray: true,
@@ -71,10 +75,17 @@ export class AccountsController {
   async findAll(
     @Query('username-only', new DefaultValuePipe(false), ParseBoolPipe)
     usernameOnly?: boolean,
+    @Query('sort-by', new DefaultValuePipe(''))
+    sortBy?: string,
   ) {
     return usernameOnly
-      ? (await this.accountsService.findAll()).map(({ username }) => username)
-      : this.accountsService.findAll();
+      ? (await this.accountsService.findAll(sortBy)).map(
+          ({ username }) => username,
+        )
+      : (await this.accountsService.findAll(sortBy)).map((account) => {
+          delete account.cookies;
+          return account;
+        });
   }
 
   @Get(':username')
