@@ -44,8 +44,14 @@ export class AccountsService {
     return results;
   }
 
-  findAll() {
-    return this.accountRepository.find();
+  findAll(sortBy?: string) {
+    return this.accountRepository.find(
+      sortBy && {
+        order: {
+          [sortBy.replace('-', '')]: sortBy.charAt(0) === '-' ? 'DESC' : 'ASC',
+        },
+      },
+    );
   }
 
   findOne(username: string) {
