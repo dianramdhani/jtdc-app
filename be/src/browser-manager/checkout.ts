@@ -1,7 +1,7 @@
 import { Logger } from '@nestjs/common';
 import { SchedulerRegistry } from '@nestjs/schedule';
 import { env } from 'process';
-import puppeteer, {
+import type {
   Browser,
   Page,
   Protocol,
@@ -26,8 +26,10 @@ export default class Checkout {
   ) {}
 
   async prepare() {
-    this.browser = await puppeteer.launch(this.config.puppeteerLaunchOptions);
-    this.page = await this.browser.newPage();
+    const { connect } = await import('puppeteer-real-browser');
+    ({ browser: this.browser, page: this.page } = await connect(
+      this.config.puppeteerLaunchOptions,
+    ));
     this.page.setRequestInterception(true);
     this.page
       .on('request', (request) => request.continue())
