@@ -1,7 +1,7 @@
 import { Logger } from '@nestjs/common';
 import { SchedulerRegistry } from '@nestjs/schedule';
 import { env } from 'process';
-import puppeteer, {
+import type {
   Browser,
   Page,
   Protocol,
@@ -21,13 +21,16 @@ export default class Checkout {
       rawCookies: string;
       logger: Logger;
       schedulerRegistry: SchedulerRegistry;
+      cronPostfix: string;
       usePoint?: boolean;
     },
   ) {}
 
   async prepare() {
-    this.browser = await puppeteer.launch(this.config.puppeteerLaunchOptions);
-    this.page = await this.browser.newPage();
+    const { connect } = await import('puppeteer-real-browser');
+    ({ browser: this.browser, page: this.page } = await connect(
+      this.config.puppeteerLaunchOptions,
+    ));
     this.page.setRequestInterception(true);
     this.page
       .on('request', (request) => request.continue())
@@ -87,7 +90,12 @@ export default class Checkout {
       );
 
       try {
-        this.config.schedulerRegistry.getCronJob('prepareCO').stop();
+        this.config.schedulerRegistry
+          .getCronJob(`prepareCO${this.config.cronPostfix}`)
+          .stop();
+        this.config.schedulerRegistry.deleteCronJob(
+          `prepareCO${this.config.cronPostfix}`,
+        );
       } catch (error) {}
     } catch (error) {
       this.config.logger.error(
@@ -218,7 +226,12 @@ export default class Checkout {
     }
 
     try {
-      this.config.schedulerRegistry.getCronJob('processCO').stop();
+      this.config.schedulerRegistry
+        .getCronJob(`processCO${this.config.cronPostfix}`)
+        .stop();
+      this.config.schedulerRegistry.deleteCronJob(
+        `processCO${this.config.cronPostfix}`,
+      );
     } catch (error) {}
   }
 }

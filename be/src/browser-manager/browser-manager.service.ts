@@ -1,21 +1,20 @@
-import puppeteer, { Protocol, PuppeteerLaunchOptions } from 'puppeteer';
+import Checkout from './checkout';
 import { Injectable, Logger } from '@nestjs/common';
 import { Cron, SchedulerRegistry } from '@nestjs/schedule';
-import { CronTime, CronJob } from '@nestjs/schedule/node_modules/cron/dist';
+import { CronTime, CronJob } from 'cron';
 import { InjectRepository } from '@nestjs/typeorm';
 import { env } from 'process';
 import { Repository } from 'typeorm';
 import { Account } from 'src/accounts/entities/account.entity';
 import { formatDate } from 'src/util/helpers';
 import { subMinutes, set } from 'date-fns';
-import Checkout from './checkout';
+import type { Protocol, PuppeteerLaunchOptions } from 'puppeteer';
 
 @Injectable()
 export class BrowserManagerService {
   private readonly logger = new Logger(BrowserManagerService.name);
   private readonly puppeteerLaunchOptions: PuppeteerLaunchOptions = {
-    headless: env.BROWSER_MODE === 'headless' ? 'new' : false,
-    defaultViewport: null,
+    headless: true,
     executablePath: env.CHROME_PATH,
   };
 
@@ -26,15 +25,11 @@ export class BrowserManagerService {
   ) {}
 
   async cookiesGrabber(username: string) {
-    const browser = await puppeteer.launch({
-      args: ['--no-sandbox'],
-      headless: env.BROWSER_MODE === 'headless' ? 'new' : false,
-      defaultViewport: null,
-    });
+    const { connect } = await import('puppeteer-real-browser');
+    const { page, browser } = await connect(this.puppeteerLaunchOptions);
     let cookies: Protocol.Network.CookieParam[] = [];
 
     try {
-      const page = await browser.newPage();
       await page.goto(env.URL_LOGIN);
       await page.type('input[name="username"]', username);
       await page.type('input[name="password"]', env.PASSWORD);
@@ -62,6 +57,7 @@ export class BrowserManagerService {
     time?: string;
     usePoint?: boolean;
   }) {
+    const cronPostfix = `-${username}-${new Date().getTime()}`;
     const checkoutInstance = new Checkout({
       logger: this.logger,
       puppeteerLaunchOptions: this.puppeteerLaunchOptions,
@@ -69,6 +65,7 @@ export class BrowserManagerService {
       rawCookies,
       username,
       usePoint,
+      cronPostfix,
     });
 
     if (!time) {
@@ -99,8 +96,8 @@ export class BrowserManagerService {
       undefined,
       'Asia/Jakarta',
     );
-    this.schedulerRegistry.addCronJob('prepareCO', prepareJob);
-    this.schedulerRegistry.addCronJob('processCO', processJob);
+    this.schedulerRegistry.addCronJob(`prepareCO${cronPostfix}`, prepareJob);
+    this.schedulerRegistry.addCronJob(`processCO${cronPostfix}`, processJob);
     prepareJob.start();
     processJob.start();
     this.logger.log(
@@ -132,11 +129,11 @@ export class BrowserManagerService {
         .then(({ cookies }) => JSON.parse(cookies));
     }
 
-    const browser = await puppeteer.launch(this.puppeteerLaunchOptions);
+    const { connect } = await import('puppeteer-real-browser');
+    const { page, browser } = await connect(this.puppeteerLaunchOptions);
     let point: number = 0;
 
     try {
-      const page = await browser.newPage();
       await page.setCookie(...cookies);
       await page.goto(env.URL_MEMBERSHIP, { waitUntil: 'networkidle2' });
       point = await page.$eval(

@@ -7,7 +7,6 @@ declare global {
       URL_MEMBERSHIP: string;
       PASSWORD: string;
       DB_URL: string;
-      BROWSER_MODE: 'head' | 'headless';
       NODE_ENV: 'dev' | 'prod';
       CHROME_PATH?: string;
     }
