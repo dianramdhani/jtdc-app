@@ -21,6 +21,7 @@ export default class Checkout {
       rawCookies: string;
       logger: Logger;
       schedulerRegistry: SchedulerRegistry;
+      cronPostfix: string;
       usePoint?: boolean;
     },
   ) {}
@@ -89,7 +90,12 @@ export default class Checkout {
       );
 
       try {
-        this.config.schedulerRegistry.getCronJob('prepareCO').stop();
+        this.config.schedulerRegistry
+          .getCronJob(`prepareCO${this.config.cronPostfix}`)
+          .stop();
+        this.config.schedulerRegistry.deleteCronJob(
+          `prepareCO${this.config.cronPostfix}`,
+        );
       } catch (error) {}
     } catch (error) {
       this.config.logger.error(
@@ -220,7 +226,12 @@ export default class Checkout {
     }
 
     try {
-      this.config.schedulerRegistry.getCronJob('processCO').stop();
+      this.config.schedulerRegistry
+        .getCronJob(`processCO${this.config.cronPostfix}`)
+        .stop();
+      this.config.schedulerRegistry.deleteCronJob(
+        `processCO${this.config.cronPostfix}`,
+      );
     } catch (error) {}
   }
 }

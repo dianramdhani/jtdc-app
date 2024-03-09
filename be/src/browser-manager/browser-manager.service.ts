@@ -57,6 +57,7 @@ export class BrowserManagerService {
     time?: string;
     usePoint?: boolean;
   }) {
+    const cronPostfix = `-${username}-${new Date().getTime()}`;
     const checkoutInstance = new Checkout({
       logger: this.logger,
       puppeteerLaunchOptions: this.puppeteerLaunchOptions,
@@ -64,6 +65,7 @@ export class BrowserManagerService {
       rawCookies,
       username,
       usePoint,
+      cronPostfix,
     });
 
     if (!time) {
@@ -94,8 +96,8 @@ export class BrowserManagerService {
       undefined,
       'Asia/Jakarta',
     );
-    this.schedulerRegistry.addCronJob('prepareCO', prepareJob);
-    this.schedulerRegistry.addCronJob('processCO', processJob);
+    this.schedulerRegistry.addCronJob(`prepareCO${cronPostfix}`, prepareJob);
+    this.schedulerRegistry.addCronJob(`processCO${cronPostfix}`, processJob);
     prepareJob.start();
     processJob.start();
     this.logger.log(
