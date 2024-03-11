@@ -7,12 +7,15 @@ import type {
   Protocol,
   PuppeteerLaunchOptions,
 } from 'puppeteer';
+import { subMinutes, set } from 'date-fns';
+import { CronJob } from 'cron';
 
 export default class Checkout {
   private headers: Record<string, string> = {};
   private addressID: number = -1;
   private browser?: Browser;
   private page?: Page;
+  private cronPostfix?: string;
 
   constructor(
     private readonly config: {
@@ -21,10 +24,61 @@ export default class Checkout {
       rawCookies: string;
       logger: Logger;
       schedulerRegistry: SchedulerRegistry;
-      cronPostfix: string;
       usePoint?: boolean;
+      time?: string;
     },
-  ) {}
+  ) {
+    this.cronPostfix = `-${this.config.username}-${new Date().getTime()}`;
+    this.start();
+  }
+
+  async start() {
+    if (!this.config.time) {
+      await this.prepare();
+      await this.process();
+      return;
+    }
+
+    const [hour, minute] = this.config.time.split(':');
+    const timePrepare = subMinutes(
+      set(new Date(), {
+        hours: +hour,
+        minutes: +minute,
+      }),
+      5,
+    );
+    const prepareJob = new CronJob(
+      `${timePrepare.getMinutes()} ${timePrepare.getHours()} * * *`,
+      () => this.prepare(),
+      undefined,
+      undefined,
+      'Asia/Jakarta',
+    );
+    const processJob = new CronJob(
+      `${minute} ${hour} * * *`,
+      () => this.process(),
+      undefined,
+      undefined,
+      'Asia/Jakarta',
+    );
+    this.config.schedulerRegistry.addCronJob(
+      `prepareCO${this.cronPostfix}`,
+      prepareJob,
+    );
+    this.config.schedulerRegistry.addCronJob(
+      `processCO${this.cronPostfix}`,
+      processJob,
+    );
+    prepareJob.start();
+    processJob.start();
+    this.config.logger.log(
+      `${
+        this.config.username
+      } prepare ${timePrepare.getHours()}:${timePrepare.getMinutes()}, process ${
+        this.config.time
+      }`,
+    );
+  }
 
   async prepare() {
     const { connect } = await import('puppeteer-real-browser');
@@ -91,10 +145,10 @@ export default class Checkout {
 
       try {
         this.config.schedulerRegistry
-          .getCronJob(`prepareCO${this.config.cronPostfix}`)
+          .getCronJob(`prepareCO${this.cronPostfix}`)
           .stop();
         this.config.schedulerRegistry.deleteCronJob(
-          `prepareCO${this.config.cronPostfix}`,
+          `prepareCO${this.cronPostfix}`,
         );
       } catch (error) {}
     } catch (error) {
@@ -227,10 +281,10 @@ export default class Checkout {
 
     try {
       this.config.schedulerRegistry
-        .getCronJob(`processCO${this.config.cronPostfix}`)
+        .getCronJob(`processCO${this.cronPostfix}`)
         .stop();
       this.config.schedulerRegistry.deleteCronJob(
-        `processCO${this.config.cronPostfix}`,
+        `processCO${this.cronPostfix}`,
       );
     } catch (error) {}
   }
