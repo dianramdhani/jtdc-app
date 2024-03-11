@@ -1,13 +1,12 @@
 import Checkout from './checkout';
 import { Injectable, Logger } from '@nestjs/common';
 import { Cron, SchedulerRegistry } from '@nestjs/schedule';
-import { CronTime, CronJob } from 'cron';
+import { CronTime } from 'cron';
 import { InjectRepository } from '@nestjs/typeorm';
 import { env } from 'process';
 import { Repository } from 'typeorm';
 import { Account } from 'src/accounts/entities/account.entity';
 import { formatDate } from 'src/util/helpers';
-import { subMinutes, set } from 'date-fns';
 import type { Protocol, PuppeteerLaunchOptions } from 'puppeteer';
 
 @Injectable()
@@ -57,52 +56,15 @@ export class BrowserManagerService {
     time?: string;
     usePoint?: boolean;
   }) {
-    const cronPostfix = `-${username}-${new Date().getTime()}`;
-    const checkoutInstance = new Checkout({
+    new Checkout({
       logger: this.logger,
       puppeteerLaunchOptions: this.puppeteerLaunchOptions,
       schedulerRegistry: this.schedulerRegistry,
       rawCookies,
       username,
       usePoint,
-      cronPostfix,
+      time,
     });
-
-    if (!time) {
-      await checkoutInstance.prepare();
-      await checkoutInstance.process();
-      return;
-    }
-
-    const [hour, minute] = time.split(':');
-    const timePrepare = subMinutes(
-      set(new Date(), {
-        hours: +hour,
-        minutes: +minute,
-      }),
-      5,
-    );
-    const prepareJob = new CronJob(
-      `${timePrepare.getMinutes()} ${timePrepare.getHours()} * * *`,
-      () => checkoutInstance.prepare(),
-      undefined,
-      undefined,
-      'Asia/Jakarta',
-    );
-    const processJob = new CronJob(
-      `${minute} ${hour} * * *`,
-      () => checkoutInstance.process(),
-      undefined,
-      undefined,
-      'Asia/Jakarta',
-    );
-    this.schedulerRegistry.addCronJob(`prepareCO${cronPostfix}`, prepareJob);
-    this.schedulerRegistry.addCronJob(`processCO${cronPostfix}`, processJob);
-    prepareJob.start();
-    processJob.start();
-    this.logger.log(
-      `${username} prepare ${timePrepare.getHours()}:${timePrepare.getMinutes()}, process ${time}`,
-    );
   }
 
   setAutoLogin(time?: string) {
@@ -165,6 +127,23 @@ export class BrowserManagerService {
         lastLogin: formatDate(new Date()),
       });
       this.logger.log(`${account.username} login successful`);
+    }
+  }
+
+  @Cron('28 8 * * 1', {
+    name: 'autoGrabCookies',
+    timeZone: 'Asia/Jakarta',
+  })
+  private async autoGrabCookies() {
+    const accounts = await this.accountRepository.find();
+    for (const account of accounts) {
+      const cookies = await this.cookiesGrabber(account.username);
+      await this.accountRepository.save({
+        ...account,
+        cookies: JSON.stringify(cookies),
+        lastCookiesUpdate: formatDate(new Date()),
+      });
+      this.logger.log(`${account.username} grab cookies successful`);
     }
   }
 }
